@@ -1,5 +1,6 @@
 package com.pnsu.spdriveapi.service;
 
+import com.google.api.client.http.InputStreamContent;
 import org.springframework.stereotype.Service;
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -17,46 +18,27 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class driveService {
-    /**
-     * Application name.
-     */
+
     private static final String APPLICATION_NAME = "Google Drive API Java Quickstart";
-    /**
-     * Global instance of the JSON factory.
-     */
+
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    /**
-     * Directory to store authorization tokens for this application.
-     */
+
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
-    /**
-     * Global instance of the scopes required by this quickstart.
-     * If modifying these scopes, delete your previously saved tokens/ folder.
-     */
-    //private static final List<String> SCOPES =Collections.singletonList(DriveScopes.DRIVE_METADATA_READONLY);
-    private static final List<String> SCOPES =Collections.singletonList(DriveScopes.DRIVE);
+    private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
 
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
-    /**
-     * Creates an authorized Credential object.
-     *
-     * @param HTTP_TRANSPORT The network HTTP Transport.
-     * @return An authorized Credential object.
-     * @throws IOException If the credentials.json file cannot be found.
-     */
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         // Load client secrets.
         InputStream in = driveService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
@@ -78,25 +60,33 @@ public class driveService {
         return credential;
     }
 
-    public String subida() throws IOException, GeneralSecurityException {
+    public String subida(MultipartFile file) throws IOException, GeneralSecurityException {
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         File fileMetadata = new File();
-        fileMetadata.setName("archivo.pdf");
-        java.io.File filePath = new java.io.File("files/archivo.pdf");
-        FileContent mediaContent = new FileContent("application/pdf", filePath);
+        String folderId = "14EeIma7av-G5Wa3J7Vlh35OhoWd12Qb0";
+
+        String uniqueFileName = UUID.randomUUID().toString();
+        String originalFilename = file.getOriginalFilename();
+
+        fileMetadata.setParents(Collections.singletonList(folderId));
+        fileMetadata.setName(uniqueFileName);
+
+        //java.io.File filePath = new java.io.File("files/archivo.pdf");
+        //FileContent mediaContent = new FileContent("application/pdf", filePath);
         try {
-            File file = service.files().create(fileMetadata, mediaContent)
+            File uploadFile = service.files().create(fileMetadata, new InputStreamContent(
+                            file.getContentType(),
+                            new ByteArrayInputStream(file.getBytes())))
                     .setFields("id")
                     .execute();
-            System.out.println("File ID: " + file.getId());
-            return file.getId();
+            //System.out.println("File ID: " + uploadFile.getId());
+            return uploadFile.getId();
             //return file.getId();
         } catch (GoogleJsonResponseException e) {
-            // TODO(developer) - handle error appropriately
             System.err.println("Unable to upload file: " + e.getDetails());
             throw e;
         }

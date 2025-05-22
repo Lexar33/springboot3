@@ -2,10 +2,8 @@ package com.pnsu.spdriveapi.controller;
 
 import com.pnsu.spdriveapi.service.driveService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -21,10 +19,10 @@ public class spController {
     }
 
     @PostMapping("/upload")
-    //String subida(RequestBody MultipartFile file) {
+    String subida(@RequestPart(value = "file") MultipartFile file) throws GeneralSecurityException, IOException{
 
-    String subida() throws GeneralSecurityException, IOException {
-        return service.subida();
+    //String subida() throws GeneralSecurityException, IOException {
+        return service.subida(file);
     }
 
 }
