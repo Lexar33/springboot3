@@ -10,7 +10,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -67,7 +66,7 @@ public class driveService {
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         File fileMetadata = new File();
-        String folderId = "14EeIma7av-G5Wa3J7Vlh35OhoWd12Qb0";
+        String folderId = "14EeIma7av-G5Wa3J7Vlh35OhoWd12Qb0"; // TENER CUIDADO
 
         String uniqueFileName = UUID.randomUUID().toString();
         String originalFilename = file.getOriginalFilename();
@@ -90,7 +89,10 @@ public class driveService {
             System.err.println("Unable to upload file: " + e.getDetails());
             throw e;
         }
+
     }
+
+
 
 
 }
