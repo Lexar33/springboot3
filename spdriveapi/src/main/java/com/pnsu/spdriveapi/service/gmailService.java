@@ -5,7 +5,6 @@ import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInsta
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -13,22 +12,21 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
-import com.google.api.services.gmail.model.Label;
-import com.google.api.services.gmail.model.ListLabelsResponse;
 import com.google.api.services.gmail.model.Message;
-import com.google.auth.http.HttpCredentialsAdapter;
+import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
-import com.google.auth.oauth2.GoogleCredentials;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,29 +44,17 @@ import org.apache.commons.codec.binary.Base64;
 public class gmailService {
 
 
-    /* class to demonstrate use of Gmail list labels API */
-    /**
-     * Application name.
-     */
     private static final String APPLICATION_NAME = "Gmail API Java Quickstart";
-    /**
-     * Global instance of the JSON factory.
-     */
+
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    /**
-     * Directory to store authorization tokens for this application.
-     */
+
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
-    /**
-     * Global instance of the scopes required by this quickstart.
-     * If modifying these scopes, delete your previously saved tokens/ folder.
-     */
     private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
+
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
-    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT)
-            throws IOException {
+    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         // Load client secrets.
         InputStream in = gmailService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (in == null) {
@@ -89,65 +75,32 @@ public class gmailService {
         return credential;
     }
 
-
-
-
-/*
-
-    //public static void main(String... args) throws IOException, GeneralSecurityException {
-    public void gmail() throws IOException, GeneralSecurityException {
-        // Build a new authorized API client service.
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        Gmail service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build();
-
-        // Print the labels in the user's account.
-        String user = "me";
-        ListLabelsResponse listResponse = service.users().labels().list(user).execute();
-        List<Label> labels = listResponse.getLabels();
-        if (labels.isEmpty()) {
-            System.out.println("No labels found.");
-        } else {
-            System.out.println("Labels:");
-            for (Label label : labels) {
-                System.out.printf("- %s\n", label.getName());
-            }
-        }
-    }
-*/
-
-    public Message sendEmail(String fromEmailAddress,
-                                    String toEmailAddress)
-            throws MessagingException,GeneralSecurityException, IOException {
-
-     //   GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(GmailScopes.GMAIL_SEND);
-
-     //   HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials);
+    public Message sendEmail(String fromEmailAddress, List<String> toEmailArray) throws MessagingException, GeneralSecurityException, IOException {
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Gmail service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-        // Create the gmail API client
-        /*
-        Gmail service = new Gmail.Builder(new NetHttpTransport(),
-                GsonFactory.getDefaultInstance(),
-                requestInitializer)
-                .setApplicationName("Gmail samples")
-                .build();
-*/
+
         // Create the email content
         String messageSubject = "Test message";
-        String bodyText = "lorem ipsum.";
+        String bodyText = "lorem ipsum Peru.";
 
         // Encode as MIME message
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         MimeMessage email = new MimeMessage(session);
+
+        Address[] arr = new Address[toEmailArray.size()];
+
+        for (int i = 0; i < toEmailArray.size(); i++)
+            arr[i] = new InternetAddress(toEmailArray.get(i));
+
+
         email.setFrom(new InternetAddress(fromEmailAddress));
-        email.addRecipient(jakarta.mail.Message.RecipientType.TO,
-                new InternetAddress(toEmailAddress));
+
+        email.addRecipients(jakarta.mail.Message.RecipientType.TO,arr);
+
         email.setSubject(messageSubject);
         email.setText(bodyText);
 
@@ -173,7 +126,10 @@ public class gmailService {
             } else {
                 throw e;
             }
+
         }
         return null;
     }
+
+
 }
